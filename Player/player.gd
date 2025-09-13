@@ -12,6 +12,10 @@ extends CharacterBody3D
 @export var playerCam:Camera3D
 @export var lookRayLength:float
 
+@export_category("Debug")
+@export var debugEnable:bool
+@export var debugSphere:PackedScene
+
 #Calculated Variables
 var currentlyJumping:bool
 var currentlyHovering:bool
@@ -45,16 +49,28 @@ func _physics_process(delta):
 	# Raycast from Camera to determine what direction mouse is looking relative to player character
 	var spaceState = get_world_3d().direct_space_state
 	var mousePosition = get_viewport().get_mouse_position()
-	var lookRayOrigin = playerCam.project_ray_origin(mousePosition)
-	var lookRayEnd = lookRayOrigin + playerCam.project_ray_normal(mousePosition) * lookRayLength
+	print("mousePos: ", mousePosition)
+	var lookRayOrigin = playerCam.position + playerCam.project_ray_origin(mousePosition)
+	print("rayOrigin: ", playerCam.project_ray_normal(mousePosition))
+	var lookRayEnd = lookRayOrigin - playerCam.project_ray_normal(mousePosition) * lookRayLength
 	var lookQuery = PhysicsRayQueryParameters3D.create(lookRayOrigin, lookRayEnd)
 	lookQuery.collide_with_areas = true
 	lookQuery.collide_with_bodies = true
 	var lookResult = spaceState.intersect_ray(lookQuery)
-	if (lookResult):
-		var tempvec = Vector3(lookResult.position)
-		print("Hit position: ", tempvec)
+	DebugDraw3D.draw_line(lookRayOrigin,lookRayEnd,Color.RED)
+	if(lookResult.is_empty()):
+		print("It's still empty you fucking moron")
+	else:
+		print("You're one iota less stupid")
+#	print(lookResult)
+#	if (lookResult):
+#		var tempvec = Vector3(lookResult)
+#		print("Hit position: ", tempvec)
 	
+#	if(debugEnable):
+#		var lookPos:Vector3
+#		lookPos = lookResult.position
+		
 #endregion
 	
 #region Jump and Jumpjet Logic
