@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
 @export_category("Movement")
+#Editable Variables
 @export var playerSpeed:float
 @export var terminalVelocity:float
 @export var enableJump:bool
@@ -8,7 +9,10 @@ extends CharacterBody3D
 @export_range(0.0, 1000.0, 0.1, "or_greater") var jetForce:float
 @export_range(0.0, 1000.0, 0.1, "or_greater") var jumpImpulse:float
 @export_range(0, 10, 0.1) var movementHoverModifier:float #reduces speed of movement when hovering as a fractin of this number. Ex: 2 reduces by 1/2. 4 reduces by 1/4 etc.
+@export var playerCam:Camera3D
+@export var lookRayLength:float
 
+#Calculated Variables
 var currentlyJumping:bool
 var currentlyHovering:bool
 var movementVelocity = Vector3.ZERO
@@ -37,6 +41,20 @@ func _physics_process(delta):
 	if lookDirection != Vector2.ZERO:
 		lookDirection = lookDirection.normalized()
 		$Pivot.basis = Basis.looking_at(lookDirection)
+		
+	# Raycast from Camera to determine what direction mouse is looking relative to player character
+	var spaceState = get_world_3d().direct_space_state
+	var mousePosition = get_viewport().get_mouse_position()
+	var lookRayOrigin = playerCam.project_ray_origin(mousePosition)
+	var lookRayEnd = lookRayOrigin + playerCam.project_ray_normal(mousePosition) * lookRayLength
+	var lookQuery = PhysicsRayQueryParameters3D.create(lookRayOrigin, lookRayEnd)
+	lookQuery.collide_with_areas = true
+	lookQuery.collide_with_bodies = true
+	var lookResult = spaceState.intersect_ray(lookQuery)
+	if (lookResult):
+		var tempvec = Vector3(lookResult.position)
+		print("Hit position: ", tempvec)
+	
 #endregion
 	
 #region Jump and Jumpjet Logic
