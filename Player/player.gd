@@ -9,7 +9,10 @@ extends CharacterBody3D
 @export_range(0.0, 1000.0, 0.1, "or_greater") var jetForce:float
 @export_range(0.0, 1000.0, 0.1, "or_greater") var jumpImpulse:float
 @export_range(0, 10, 0.1) var movementHoverModifier:float #reduces speed of movement when hovering as a fractin of this number. Ex: 2 reduces by 1/2. 4 reduces by 1/4 etc.
+
+@export_category("Player View")
 @export var playerCam:Camera3D
+@export var viewTracker:Node3D
 @export var lookRayLength:float
 
 @export_category("Debug")
@@ -49,27 +52,36 @@ func _physics_process(delta):
 	# Raycast from Camera to determine what direction mouse is looking relative to player character
 	var spaceState = get_world_3d().direct_space_state
 	var mousePosition = get_viewport().get_mouse_position()
-	print("mousePos: ", mousePosition)
-	var lookRayOrigin = playerCam.position + playerCam.project_ray_origin(mousePosition)
-	print("rayOrigin: ", playerCam.project_ray_normal(mousePosition))
-	var lookRayEnd = lookRayOrigin - playerCam.project_ray_normal(mousePosition) * lookRayLength
+	var lookRayOrigin = playerCam.project_ray_origin(mousePosition)
+	var lookRayEnd = lookRayOrigin + playerCam.project_ray_normal(mousePosition) * lookRayLength
+	#lookRayEnd = Vector3(lookRayEnd.x, 0.0 ,lookRayEnd.z)
 	var lookQuery = PhysicsRayQueryParameters3D.create(lookRayOrigin, lookRayEnd)
 	lookQuery.collide_with_areas = true
 	lookQuery.collide_with_bodies = true
 	var lookResult = spaceState.intersect_ray(lookQuery)
-	DebugDraw3D.draw_line(lookRayOrigin,lookRayEnd,Color.RED)
-	if(lookResult.is_empty()):
-		print("It's still empty you fucking moron")
-	else:
-		print("You're one iota less stupid")
-#	print(lookResult)
-#	if (lookResult):
-#		var tempvec = Vector3(lookResult)
-#		print("Hit position: ", tempvec)
+	if(!lookResult.is_empty()):
+		$CSGBox3D.look_at(lookResult.position,Vector3.UP)
 	
-#	if(debugEnable):
-#		var lookPos:Vector3
-#		lookPos = lookResult.position
+	if(debugEnable):
+		print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		print("mousePosition: ", mousePosition)
+		print("lookRayOrigin: ", lookRayOrigin)
+		print("lookRayEnd:    ", lookRayEnd)
+		print("lookQuery:     ", lookQuery)
+		print("lookResult:     ", lookResult)
+		print("lookPosition:   ", lookResult.position)
+		print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		DebugDraw3D.draw_line(lookRayOrigin,lookRayEnd,Color.RED)
+		#DebugDraw3D.draw_sphere(lookRayOrigin, 0.5, Color.BLACK)
+		#DebugDraw3D.draw_ray(lookRayOrigin, playerCam.project_ray_normal(mousePosition), 500.0, Color.CYAN)
+		DebugDraw3D.draw_ray(Vector3.ZERO, Vector3(0,1,0), 500, Color.YELLOW)
+		#DebugDraw3D.draw_camera_frustum(playerCam, Color.BROWN)
+		if(lookResult.is_empty()):
+			print("It's still empty you fucking moron")
+		else:
+			print("You're one iota less stupid")
+	
+		
 		
 #endregion
 	
